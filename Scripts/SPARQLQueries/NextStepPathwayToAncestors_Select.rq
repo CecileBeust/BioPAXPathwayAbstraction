@@ -12,7 +12,7 @@ PREFIX bp3: <http://www.biopax.org/release/biopax-level3.owl#>
 PREFIX reactome: <http://www.reactome.org/biopax/40/48887#>
 PREFIX abstraction:<http://abstraction/#>
 
-SELECT DISTINCT ?pathwayID ?nextPathwayID
+SELECT DISTINCT ?pathwayName ?nextName ?tag
 WHERE {
   ?pathway rdf:type bp3:Pathway .
   ?nextPathway rdf:type bp3:Pathway .
@@ -22,15 +22,30 @@ WHERE {
   
   ?pathwayStep bp3:nextStep ?nextStep .
   
-  FILTER (?pathway != ?nextPathway)
-
-  ?pathway bp3:xref ?pathwayXref .
-  ?pathwayXref rdf:type bp3:UnificationXref .
-  ?pathwayXref bp3:db "Reactome" .
-  ?pathwayXref bp3:id ?pathwayID .
+  {
+    ?parentNextPathway bp3:pathwayComponent+ ?nextPathway .
+    VALUES ?tag { "NextStepParentPathway" }
+    BIND (?parentNextPathway AS ?next)
+  }
   
-  ?nextPathway bp3:xref ?nextPathwayXref .
-  ?nextPathwayXref rdf:type bp3:UnificationXref .
-  ?nextPathwayXref bp3:db "Reactome" .
-  ?nextPathwayXref bp3:id ?nextPathwayID .
+  UNION
+  
+    {
+    ?parentNextPathway bp3:pathwayComponent+ ?nextPathway .
+    VALUES ?tag { "NextStepPathway" }
+    BIND (?nextPathway AS ?next)
+  }
+  
+  UNION
+  
+  {
+    FILTER NOT EXISTS { ?parentNextPathway bp3:pathwayComponent+ ?nextPathway }
+    VALUES ?tag { "NextStepPathway" }
+    BIND (?nextPathway AS ?next)
+  }
+  
+  ?pathway bp3:displayName ?pathwayName .
+  ?next bp3:displayName ?nextName .
+  
+  FILTER (?pathway != ?nextPathway)
 }

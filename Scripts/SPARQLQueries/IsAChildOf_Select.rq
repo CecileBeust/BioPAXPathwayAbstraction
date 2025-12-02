@@ -11,3 +11,20 @@ PREFIX oboInOwl: <http://www.geneontology.org/formats/oboInOwl#>
 PREFIX bp3: <http://www.biopax.org/release/biopax-level3.owl#>
 PREFIX reactome: <http://www.reactome.org/biopax/40/48887#>
 PREFIX abstraction:<http://abstraction/#>
+
+SELECT DISTINCT ?pathwayID ?subPathwayID
+WHERE {
+  ?pathway rdf:type bp3:Pathway .
+  ?pathway bp3:pathwayComponent ?subPathway .
+  ?subPathway rdf:type bp3:Pathway .
+
+  ?pathway bp3:xref ?pathwayXref .
+  ?pathwayXref rdf:type bp3:UnificationXref .
+  ?pathwayXref bp3:db "Reactome" .
+  ?pathwayXref bp3:id ?pathwayID .
+  
+  ?subPathway bp3:xref ?subPathwayXref .
+  ?subPathwayXref rdf:type bp3:UnificationXref .
+  ?subPathwayXref bp3:db "Reactome" .
+  ?subPathwayXref bp3:id ?subPathwayID .
+}
