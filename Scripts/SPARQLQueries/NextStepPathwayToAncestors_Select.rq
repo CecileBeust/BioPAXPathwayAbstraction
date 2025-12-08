@@ -12,16 +12,18 @@ PREFIX bp3: <http://www.biopax.org/release/biopax-level3.owl#>
 PREFIX reactome: <http://www.reactome.org/biopax/40/48887#>
 PREFIX abstraction:<http://abstraction/#>
 
-SELECT DISTINCT ?pathwayName ?nextName ?tag
+SELECT DISTINCT ?pathwayID ?nextID ?tag
 WHERE {
+  # Define pathway and nextPathway variables
   ?pathway rdf:type bp3:Pathway .
   ?nextPathway rdf:type bp3:Pathway .
   
+  # Get the next pathway
   ?pathway bp3:pathwayOrder ?pathwayStep .
   ?nextPathway bp3:pathwayOrder ?nextStep .
-  
   ?pathwayStep bp3:nextStep ?nextStep .
-  
+
+  # When there are ancestors: Bind the pathway ancestors to the ?next variable
   {
     ?parentNextPathway bp3:pathwayComponent+ ?nextPathway .
     VALUES ?tag { "NextStepParentPathway" }
@@ -30,7 +32,8 @@ WHERE {
   
   UNION
   
-    {
+  # When there are ancestors: Bind the next pathway to the ?next variable
+  {
     ?parentNextPathway bp3:pathwayComponent+ ?nextPathway .
     VALUES ?tag { "NextStepPathway" }
     BIND (?nextPathway AS ?next)
@@ -38,14 +41,24 @@ WHERE {
   
   UNION
   
+  # When there are no ancestors: Bind only the next pathway to the ?next variable
   {
     FILTER NOT EXISTS { ?parentNextPathway bp3:pathwayComponent+ ?nextPathway }
     VALUES ?tag { "NextStepPathway" }
     BIND (?nextPathway AS ?next)
   }
+
+  # Get back pathway Reactome stable identifiers
+  ?pathway bp3:xref ?pathwayXref .
+  ?pathwayXref rdf:type bp3:UnificationXref .
+  ?pathwayXref bp3:db "Reactome" .
+  ?pathwayXref bp3:id ?pathwayID .
   
-  ?pathway bp3:displayName ?pathwayName .
-  ?next bp3:displayName ?nextName .
-  
-  FILTER (?pathway != ?nextPathway)
+  ?next bp3:xref ?nextPathwayXref .
+  ?nextPathwayXref rdf:type bp3:UnificationXref .
+  ?nextPathwayXref bp3:db "Reactome" .
+  ?nextPathwayXref bp3:id ?nextID .
+
+  # Ensure that the pathway and the next pathway are different
+  FILTER (?pathwayID != ?nextID)
 }

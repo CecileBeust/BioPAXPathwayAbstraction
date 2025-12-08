@@ -1,0 +1,46 @@
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>
+PREFIX owl: <http://www.w3.org/2002/07/owl#>
+PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+PREFIX dc: <http://purl.org/dc/elements/1.1/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+
+PREFIX bp3: <http://www.biopax.org/release/biopax-level3.owl#>
+
+# Homo_sapiens-20250909.owl
+PREFIX reactome: <http://www.reactome.org/biopax/40/48887#> 
+
+
+SELECT DISTINCT ?previousPathwayAncestorID ?nextPathwayAncestorID
+WHERE {
+  VALUES ?previousStep { reactome:PathwayStep3728 }
+  ?previousStep rdf:type bp3:PathwayStep .
+  ?previousStep bp3:nextStep ?nextStep .
+  
+  ?previousPathway bp3:pathwayOrder ?previousStep .
+  ?nextPathway bp3:pathwayOrder ?nextStep .
+  
+  ?previousPathwayAncestor bp3:pathwayComponent* ?previousPathway .
+  ?nextPathwayAncestor bp3:pathwayComponent* ?nextPathway .
+  
+  FILTER NOT EXISTS {
+    ?previousPathwayAncestor bp3:pathwayComponent* ?nextPathwayAncestor .
+  }
+  FILTER NOT EXISTS {
+    ?nextPathwayAncestor bp3:pathwayComponent* ?previousPathwayAncestor .
+  }
+  
+  ?previousPathwayAncestor bp3:xref [
+      rdf:type bp3:UnificationXref ;
+      bp3:db "Reactome" ;
+      bp3:id ?previousPathwayAncestorID
+  ] .
+  
+  ?nextPathwayAncestor bp3:xref [
+      rdf:type bp3:UnificationXref ;
+      bp3:db "Reactome" ;
+      bp3:id ?nextPathwayAncestorID
+  ] .
+  
+}
+#LIMIT 5
